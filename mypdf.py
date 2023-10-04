@@ -18,47 +18,49 @@ pdfmetrics.registerFont(TTFont('Hebrew_david', 'DavidLibre-Bold.ttf'))
 #     if isinstance(s, str):
 #         return s[::-1]
 #     return str(s)  # Convert non-string values to strings
-# def reverse_slicing(s):
-#     if isinstance(s, str):
-#         result = ""
-#         non_digit_chars = ""
-#         digit_chars = ""
-#
-#         for char in s:
-#             if char.isdigit():
-#                 if non_digit_chars:
-#                     result = non_digit_chars[::-1] + result
-#                     non_digit_chars = ""
-#                 digit_chars += char
-#             else:
-#                 if digit_chars:
-#                     result = digit_chars + result
-#                     digit_chars = ""
-#                 non_digit_chars += char
-#
-#         result = digit_chars + result
-#         result = non_digit_chars[::-1] + result
-#
-#         return result
-#     return str(s)
 def reverse_slicing(s):
-    s = str(s)
-    s = list(s)
-    i, j = 0, len(s) - 1
-    while i < j:
-        if (s[i].isdigit() and s[j].isdigit()) or (s[i] == '(' and s[j] == ')'):
-            s[i], s[j] = s[j], s[i]
-            i += 1
-            j -= 1
-        elif s[i].isdigit() or s[i] == '(':
-            j -= 1
-        elif s[j].isdigit() or s[j] == ')':
-            i += 1
-        else:
-            s[i], s[j] = s[j], s[i]
-            i += 1
-            j -= 1
-    return ''.join(s)
+    if isinstance(s, str):
+        result = ""
+        non_digit_chars = ""
+        digit_chars = ""
+
+        for char in s:
+            if char.isdigit():
+                if non_digit_chars:
+                    result = non_digit_chars[::-1] + result
+                    non_digit_chars = ""
+                digit_chars += char
+            else:
+                if digit_chars:
+                    result = digit_chars + result
+                    digit_chars = ""
+                non_digit_chars += char
+
+        result = digit_chars + result
+        result = non_digit_chars[::-1] + result
+
+        return result
+    return str(s)
+
+
+# def reverse_slicing(s):
+#     s = str(s)
+#     s = list(s)
+#     i, j = 0, len(s) - 1
+#     while i < j:
+#         if (s[i].isdigit() and s[j].isdigit()) or (s[i] == '(' and s[j] == ')'):
+#             s[i], s[j] = s[j], s[i]
+#             i += 1
+#             j -= 1
+#         elif s[i].isdigit() or s[i] == '(':
+#             j -= 1
+#         elif s[j].isdigit() or s[j] == ')':
+#             i += 1
+#         else:
+#             s[i], s[j] = s[j], s[i]
+#             i += 1
+#             j -= 1
+#     return ''.join(s)
 
 
 # Define a mapping of parameter names/indices to x, y coordinates
@@ -116,6 +118,7 @@ def generate_individual_pdf(row_data, output_dir):
                 #     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                 if value in ["Parameter5"]:
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
+
                 if value in ["Parameter6"]:
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                 if value in ["Parameter7"]:
@@ -137,6 +140,8 @@ def generate_individual_pdf(row_data, output_dir):
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                 if value in ["Parameter5"]:
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
+                    print(parameter)
+                    print(reverse_slicing(parameter))
                 if value in ["Parameter6"]:
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                 if value in ["Parameter7"]:
@@ -177,7 +182,7 @@ if not os.path.exists(output_directory):
     os.makedirs(output_directory)
 # Define the initial template file
 initial_template_file_path = ''
-for row in sheet.iter_rows(min_row=2, max_col=10, values_only=True):
+for row in sheet.iter_rows(min_row=2, max_col=9, values_only=True):
     [city, job_description, pdf_filename] = generate_individual_pdf(row, output_directory)
 
     try:
