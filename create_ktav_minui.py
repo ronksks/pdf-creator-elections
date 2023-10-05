@@ -1,9 +1,6 @@
 import re
-
 import PyPDF2
 import os
-
-from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -41,26 +38,6 @@ def reverse_slicing(s):
 
         return result
     return str(s)
-
-
-# def reverse_slicing(s):
-#     s = str(s)
-#     s = list(s)
-#     i, j = 0, len(s) - 1
-#     while i < j:
-#         if (s[i].isdigit() and s[j].isdigit()) or (s[i] == '(' and s[j] == ')'):
-#             s[i], s[j] = s[j], s[i]
-#             i += 1
-#             j -= 1
-#         elif s[i].isdigit() or s[i] == '(':
-#             j -= 1
-#         elif s[j].isdigit() or s[j] == ')':
-#             i += 1
-#         else:
-#             s[i], s[j] = s[j], s[i]
-#             i += 1
-#             j -= 1
-#     return ''.join(s)
 
 
 # Define a mapping of parameter names/indices to x, y coordinates
@@ -107,12 +84,8 @@ parameter_coordinates_sadran_hachvana = {
 
 
 def generate_individual_pdf(row_data, output_dir):
-    # pdf_filename = f"{output_dir}/כתב מינוי_{row[3]}_{row[2]}.pdf"
     pdf_filename_ini = f"{output_dir}/{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
-    # pdf_filename = final_output_filename.replace('"', ''')
     pdf_filename = re.sub('[<>:"\\|?*]', "'", pdf_filename_ini)
-
-    # pdf_filename = f"{output_dir}/{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
     template_canvas = canvas.Canvas(pdf_filename, pagesize=(2000, 2000))
     template_canvas.setFont('Hebrew_david', 11)
     parameter_index = 0  # Initialize parameter index
@@ -229,9 +202,6 @@ def generate_individual_pdf(row_data, output_dir):
 
     template_canvas.save()
     return [row_data[1], row_data[2], pdf_filename]
-
-
-# return pdf_filename
 
 
 # Load Excel data and generate individual PDFs
@@ -357,10 +327,6 @@ for row in sheet.iter_rows(min_row=2, max_col=11, values_only=True):
                 template_file_path = f'pdf_files/{rishon["kolet"]}'
             else:
                 continue
-        #         template_file_path = initial_template_file_path  # Use the initial template file as a default
-        # else:
-        #     template_file_path = initial_template_file_path  # Use the initial template file as a default
-
         # Open the PDF files in binary mode
         template_file = open(template_file_path, 'rb')
         data_file = open(pdf_filename, 'rb')
@@ -385,7 +351,6 @@ for row in sheet.iter_rows(min_row=2, max_col=11, values_only=True):
         merged_writer.add_page(template_page)
 
         # Save the output PDF file
-        # final_output_filename = f"{output_directory}/כתב מינוי_{row[3]}_{row[2]}.pdf"
         final_output_filename_ini = f"{output_directory}/{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
         final_output_filename = re.sub('[<>:"\\|?*]', "'", final_output_filename_ini)
 
