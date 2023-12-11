@@ -84,8 +84,16 @@ parameter_coordinates_sadran_hachvana = {
 
 
 def generate_individual_pdf(row_data, output_dir):
-    pdf_filename_ini = f"{output_dir}/{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
-    pdf_filename = re.sub('[<>:"\\|?*]', "'", pdf_filename_ini)
+    pdf_filename_ini = f"{row[4] if row[4] is not None else ''}_{row[3] if row[3] is not None else ''}_{row[2] if row[2] is not None else ''}_{row[7] if row[7] is not None else ''}_{row[6] if row[6] is not None else ''}.pdf"
+    pdf_filename_ini = re.sub('[<>:"\\|?*/]', "'", pdf_filename_ini)
+    pdf_filename = output_dir + "/" + pdf_filename_ini
+
+
+# pdf_filename_ini = f"{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
+#     pdf_filename_ini = re.sub('[<>:"\\|?*/]', "'", pdf_filename_ini)
+#     pdf_filename = output_dir + "/" + pdf_filename_ini
+
+
     template_canvas = canvas.Canvas(pdf_filename, pagesize=(2000, 2000))
     template_canvas.setFont('Hebrew_david', 11)
     parameter_index = 0  # Initialize parameter index
@@ -351,8 +359,11 @@ for row in sheet.iter_rows(min_row=2, max_col=11, values_only=True):
         merged_writer.add_page(template_page)
 
         # Save the output PDF file
-        final_output_filename_ini = f"{output_directory}/{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
-        final_output_filename = re.sub('[<>:"\\|?*]', "'", final_output_filename_ini)
+        # final_output_filename_ini = f"{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
+        final_output_filename_ini = f"{row[4] if row[4] is not None else ''}_{row[3] if row[3] is not None else ''}_{row[2] if row[2] is not None else ''}_{row[7] if row[7] is not None else ''}_{row[6] if row[6] is not None else ''}.pdf"
+
+        final_output_filename = re.sub('[<>:"\\|?*/]', "'", final_output_filename_ini)
+        final_output_filename = f"{output_directory}/{final_output_filename}"
 
         with open(final_output_filename, 'wb') as output_file:
             merged_writer.write(output_file)
