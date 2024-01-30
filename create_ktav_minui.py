@@ -6,9 +6,24 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from openpyxl import load_workbook
 
+# before running- you need to fix the input data.
+# fix the address in excel with this: =IF(T2="", V2, T2 & " " & U2 & ", " & V2)
+
+
 # pdfmetrics.registerFont(TTFont('Hebrew', 'Assistant-VariableFont_wght.ttf'))
 pdfmetrics.registerFont(TTFont('Hebrew', 'arial-hebrew-bold.ttf'))
 pdfmetrics.registerFont(TTFont('Hebrew_david', 'DavidLibre-Bold.ttf'))
+
+
+def calculate_text_start(line_start, line_width, font_size, name):
+    # Step 1: Calculate the width of the text
+    char_width = font_size * 1.5  # This is an estimate
+    text_width = len(name) * char_width
+    print('name: ', name)
+    # Step 2: Calculate the starting point for the text
+    text_start = line_start - (line_width - text_width) / 2
+
+    return text_start
 
 
 # def reverse_slicing(s):
@@ -43,16 +58,23 @@ def reverse_slicing(s):
 # Define a mapping of parameter names/indices to x, y coordinates
 # מזכיר/סדרן/אב בית סדרן
 parameter_coordinates_rest = {
-
-    "Parameter1": (357, 567),  # שם מלא
-    "Parameter2": (210, 567),  # רחוב+עיר
-    "Parameter3": (100, 567),  # תז
+    # changed height for ramat hasharon
+    # "Parameter1": (357, 567),  # שם מלא
+    # "Parameter2": (210, 567),  # רחוב+עיר
+    # "Parameter3": (100, 567),  # תז
+    "Parameter1": (357, 570),  # שם מלא
+    "Parameter2": (210, 570),  # רחוב+עיר
+    "Parameter3": (100, 570),  # תז
     "Parameter4": (0, 0),  # מספר ריכוז
     # "Parameter4": (413, 550),  # מספר ריכוז
-    "Parameter5": (272, 550),  # מיקום קלפי\ ריכוז
-    "Parameter6": (148, 550),  # כתובת מיקום קלפי\ ריכוז
+    "Parameter5": (272, 553),  # מיקום קלפי\ ריכוז
+    "Parameter6": (148, 553),  # כתובת מיקום קלפי\ ריכוז
     # "Parameter7": (330, 514),  # קלפיות החלפה
-    "Parameter7": (413, 550),  # מספר קלפי
+    "Parameter7": (413, 553),  # מספר קלפי
+    # "Parameter5": (272, 550),  # מיקום קלפי\ ריכוז
+    # "Parameter6": (148, 550),  # כתובת מיקום קלפי\ ריכוז
+    # # "Parameter7": (330, 514),  # קלפיות החלפה
+    # "Parameter7": (413, 550),  # מספר קלפי
     "Parameter8": (0, 0),  # קלפיות החלפה
 
 }
@@ -70,13 +92,15 @@ parameter_coordinates_second_or_kolet = {
 }
 
 parameter_coordinates_sadran_hachvana = {
-    "Parameter1": (357, 567),  # שם מלא
-    "Parameter2": (210, 567),  # רחוב+עיר
-    "Parameter3": (100, 567),  # תז
+    "Parameter1": (357, 570),  # שם מלא
+    # "Parameter2": (210, 570),  # רחוב+עיר
+    # TODO chandeg 210=>205
+    "Parameter2": (205, 570),  # רחוב+עיר
+    "Parameter3": (100, 570),  # תז
     # "Parameter4": (406, 550),  # מספר ריכוז
     "Parameter4": (0, 0),  # מספר ריכוז
-    "Parameter5": (300, 550),  # מיקום קלפי\ ריכוז
-    "Parameter6": (165, 550),  # כתובת מיקום קלפי\ ריכוז
+    "Parameter5": (300, 553),  # מיקום קלפי\ ריכוז
+    "Parameter6": (165, 553),  # כתובת מיקום קלפי\ ריכוז
     "Parameter7": (0, 0),  # מספר קלפי
     "Parameter8": (0, 0),  # קלפיות החלפה
 
@@ -84,34 +108,43 @@ parameter_coordinates_sadran_hachvana = {
 
 
 def generate_individual_pdf(row_data, output_dir):
-    pdf_filename_ini = f"{row[4] if row[4] is not None else ''}_{row[3] if row[3] is not None else ''}_{row[2] if row[2] is not None else ''}_{row[7] if row[7] is not None else ''}_{row[6] if row[6] is not None else ''}.pdf"
+    # pdf_filename_ini = f"{row[4] if row[4] is not None else ''}_{row[3] if row[3] is not None else ''}_{row[2] if row[2] is not None else ''}_{row[7] if row[7] is not None else ''}_{row[6] if row[6] is not None else ''}.pdf"
+    pdf_filename_ini = f"{row[3] if row[3] is not None else ''}_{row[2] if row[2] is not None else ''}_{row[4] if row[4] is not None else ''}_{row[7] if row[7] is not None else ''}_{row[6] if row[6] is not None else ''}.pdf"
     pdf_filename_ini = re.sub('[<>:"\\|?*/]', "'", pdf_filename_ini)
     pdf_filename = output_dir + "/" + pdf_filename_ini
 
-
-# pdf_filename_ini = f"{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
-#     pdf_filename_ini = re.sub('[<>:"\\|?*/]', "'", pdf_filename_ini)
-#     pdf_filename = output_dir + "/" + pdf_filename_ini
-
+    # pdf_filename_ini = f"{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
+    #     pdf_filename_ini = re.sub('[<>:"\\|?*/]', "'", pdf_filename_ini)
+    #     pdf_filename = output_dir + "/" + pdf_filename_ini
 
     template_canvas = canvas.Canvas(pdf_filename, pagesize=(2000, 2000))
     template_canvas.setFont('Hebrew_david', 11)
+    font_size = 11
     parameter_index = 0  # Initialize parameter index
 
     if row_data[2] == "סדרן הכוונה" or row_data[2] == "סדרן מטה":
         for parameter, value in zip(row_data[3:], parameter_coordinates_sadran_hachvana.keys()):
-            print(f'parameter: {parameter}, value: {parameter_coordinates_sadran_hachvana[value]}')
             if parameter:
+                print(f'parameter: {parameter}, value: {parameter_coordinates_sadran_hachvana[value]}')
                 x_coord, y_coord = parameter_coordinates_sadran_hachvana[value]
                 if x_coord == 0 and y_coord == 0:
                     continue  # Skip printing for (0, 0) coordinates
+                # if parameter_index == 0:
+                #     x_coord = calculate_text_start(x_coord, 94, 11, parameter)
+                # if parameter_index == 3:
+                #     x_coord = calculate_text_start(x_coord, 160, 11, parameter)
+                # if parameter_index == 4:
+                #     x_coord = calculate_text_start(x_coord, 120, 11, parameter)
                 if parameter_index == 1:
-                    if len(str(parameter)) > 24:
+                    # TODO changed 24 => 26
+                    if len(str(parameter)) > 26:
                         template_canvas.setFont('Hebrew_david', 9)
+                        font_size = 9
                         x_coord = 200
                     else:
                         template_canvas.setFont('Hebrew_david', 11)
                         x_coord, y_coord = parameter_coordinates_sadran_hachvana[value]
+
                 else:
                     template_canvas.setFont('Hebrew_david', 11)
                 if value in ["Parameter1"]:
@@ -225,6 +258,7 @@ ramat_hasharon = {
     "mazkir_mahlif": "רמש כתב מינוי מזכיר מחליף.pdf",
     "kolet": "רמש כתב מינוי קולט.pdf",
     "sadran_mate": "רמש כתב מינוי לסדרן מטה.pdf",
+    "mazkir_movil": "רמש כתב מינוי מזכיר מוביל.pdf",
 }
 
 bat_yam = {
@@ -280,6 +314,8 @@ for row in sheet.iter_rows(min_row=2, max_col=11, values_only=True):
                 template_file_path = f'pdf_files/{ramat_hasharon["av_bait_vesadran"]}'
             elif job_description == 'קולט':
                 template_file_path = f'pdf_files/{ramat_hasharon["kolet"]}'
+            elif job_description == 'מזכיר מוביל':
+                template_file_path = f'pdf_files/{ramat_hasharon["mazkir_movil"]}'
             else:
                 continue
 
@@ -360,7 +396,9 @@ for row in sheet.iter_rows(min_row=2, max_col=11, values_only=True):
 
         # Save the output PDF file
         # final_output_filename_ini = f"{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
-        final_output_filename_ini = f"{row[4] if row[4] is not None else ''}_{row[3] if row[3] is not None else ''}_{row[2] if row[2] is not None else ''}_{row[7] if row[7] is not None else ''}_{row[6] if row[6] is not None else ''}.pdf"
+        # print(f' XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - {row[4]}')
+        # final_output_filename_ini = f"{row[4] if row[4] is not None else ''}_{row[3] if row[3] is not None else ''}_{row[2] if row[2] is not None else ''}_{row[7] if row[7] is not None else ''}_{row[6] if row[6] is not None else ''}.pdf"
+        final_output_filename_ini = f"{row[3] if row[3] is not None else ''}_{row[2] if row[2] is not None else ''}_{row[4] if row[4] is not None else ''}_{row[7] if row[7] is not None else ''}_{row[6] if row[6] is not None else ''}.pdf"
 
         final_output_filename = re.sub('[<>:"\\|?*/]', "'", final_output_filename_ini)
         final_output_filename = f"{output_directory}/{final_output_filename}"
