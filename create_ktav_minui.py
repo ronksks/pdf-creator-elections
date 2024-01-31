@@ -15,15 +15,31 @@ pdfmetrics.registerFont(TTFont('Hebrew', 'arial-hebrew-bold.ttf'))
 pdfmetrics.registerFont(TTFont('Hebrew_david', 'DavidLibre-Bold.ttf'))
 
 
-def calculate_text_start(line_start, line_width, font_size, name):
-    # Step 1: Calculate the width of the text
-    char_width = font_size * 1.5  # This is an estimate
-    text_width = len(name) * char_width
-    print('name: ', name)
-    # Step 2: Calculate the starting point for the text
-    text_start = line_start - (line_width - text_width) / 2
+# def calculate_text_start(line_start, line_width, font_size, name):
+#     # Step 1: Calculate the width of the text
+#     # char_width = font_size * 1.5  # This is an estimate
+#     # text_width = len(name) * char_width
+#     # is 17
+#     len_Name= len(name)
+#     print('name: ', name)
+#     # Step 2: Calculate the starting point for the text
+#     text_start = line_start + (line_width - text_width) / 2
+#     # returned_value = line_start+ (line_start-text_start)
+#
+#     return text_start
+def calculate_num(num, text, jump, starting_length):
+    # Calculate the length of the string
+    length = len(text)
+    if length == 29:
+        return num + 5
+    # If the length is 17 characters or more, return the same number
+    if length >= starting_length:
+        return num
 
-    return text_start
+    # For each 2 letters less than 17, return the number -10
+    else:
+        diff = starting_length - length
+        return num + (diff // 2) * jump
 
 
 # def reverse_slicing(s):
@@ -65,7 +81,7 @@ parameter_coordinates_rest = {
     "Parameter1": (357, 570),  # שם מלא
     "Parameter2": (210, 570),  # רחוב+עיר
     "Parameter3": (100, 570),  # תז
-    "Parameter4": (0, 0),  # מספר ריכוז
+    "Parameter4": (413, 553),  # מספר ריכוז
     # "Parameter4": (413, 550),  # מספר ריכוז
     "Parameter5": (272, 553),  # מיקום קלפי\ ריכוז
     "Parameter6": (148, 553),  # כתובת מיקום קלפי\ ריכוז
@@ -80,14 +96,14 @@ parameter_coordinates_rest = {
 }
 parameter_coordinates_second_or_kolet = {
 
-    "Parameter1": (357, 567),  # שם מלא
-    "Parameter2": (210, 567),  # רחוב+עיר
-    "Parameter3": (100, 567),  # תז
-    "Parameter4": (413, 550),  # מספר ריכוז
-    "Parameter5": (269, 550),  # מיקום קלפי\ ריכוז
-    "Parameter6": (148, 550),  # כתובת מיקום קלפי\ ריכוז
+    "Parameter1": (357, 570),  # שם מלא
+    "Parameter2": (210, 570),  # רחוב+עיר
+    "Parameter3": (100, 570),  # תז
+    "Parameter4": (413, 553),  # מספר ריכוז
+    "Parameter5": (269, 553),  # מיקום קלפי\ ריכוז
+    "Parameter6": (148, 553),  # כתובת מיקום קלפי\ ריכוז
     "Parameter7": (0, 0),  # מספר קלפי
-    "Parameter8": (330, 514),  # קלפיות החלפה
+    "Parameter8": (330, 516),  # קלפיות החלפה
 
 }
 
@@ -113,10 +129,6 @@ def generate_individual_pdf(row_data, output_dir):
     pdf_filename_ini = re.sub('[<>:"\\|?*/]', "'", pdf_filename_ini)
     pdf_filename = output_dir + "/" + pdf_filename_ini
 
-    # pdf_filename_ini = f"{row[4]}_{row[3]}_{row[2]}_{row[7]}_{row[6]}.pdf"
-    #     pdf_filename_ini = re.sub('[<>:"\\|?*/]', "'", pdf_filename_ini)
-    #     pdf_filename = output_dir + "/" + pdf_filename_ini
-
     template_canvas = canvas.Canvas(pdf_filename, pagesize=(2000, 2000))
     template_canvas.setFont('Hebrew_david', 11)
     font_size = 11
@@ -129,27 +141,28 @@ def generate_individual_pdf(row_data, output_dir):
                 x_coord, y_coord = parameter_coordinates_sadran_hachvana[value]
                 if x_coord == 0 and y_coord == 0:
                     continue  # Skip printing for (0, 0) coordinates
-                # if parameter_index == 0:
-                #     x_coord = calculate_text_start(x_coord, 94, 11, parameter)
-                # if parameter_index == 3:
-                #     x_coord = calculate_text_start(x_coord, 160, 11, parameter)
-                # if parameter_index == 4:
-                #     x_coord = calculate_text_start(x_coord, 120, 11, parameter)
+
                 if parameter_index == 1:
                     # TODO changed 24 => 26
                     if len(str(parameter)) > 26:
                         template_canvas.setFont('Hebrew_david', 9)
                         font_size = 9
                         x_coord = 200
+                        if len(str(parameter)) < 30:
+                            x_coord = calculate_num(x_coord, parameter, 8, 29)
+                            # x_coord += 15
                     else:
                         template_canvas.setFont('Hebrew_david', 11)
                         x_coord, y_coord = parameter_coordinates_sadran_hachvana[value]
-
+                        x_coord = calculate_num(x_coord, parameter, 4, 25)
                 else:
                     template_canvas.setFont('Hebrew_david', 11)
                 if value in ["Parameter1"]:
+                    # x_coord = calculate_text_start(x_coord, 94, 11, parameter)
+                    x_coord = calculate_num(x_coord, parameter, 5, 17)
                     # template_canvas.setFont('Hebrew_david', 16)
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
+                    print("value1 - parameter: ", parameter)
                 if value in ["Parameter2"]:
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                 if value in ["Parameter3"]:
@@ -157,8 +170,12 @@ def generate_individual_pdf(row_data, output_dir):
                 if value in ["Parameter4"]:
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                 if value in ["Parameter5"]:
+                    print("value1 - parameter: ", parameter)
+                    x_coord = calculate_num(x_coord, parameter, 5, 21)
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                 if value in ["Parameter6"]:
+                    print("value1 - parameter: ", parameter)
+                    x_coord = calculate_num(x_coord, parameter, 5, 17)
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                 if value in ["Parameter7"]:
                     template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
@@ -167,7 +184,7 @@ def generate_individual_pdf(row_data, output_dir):
                 parameter_index += 1
 
     else:
-        if row_data[2] == 'מזכיר מחליף' or row_data[2] == 'קולט' or row_data[2] == 'מזכיר שני':
+        if row_data[2] == 'מזכיר מחליף בריכוז' or row_data[2] == 'קולט' or row_data[2] == 'מזכיר שני':
             for parameter, value in zip(row_data[3:], parameter_coordinates_second_or_kolet.keys()):
                 print(f'parameter: {parameter}, value: {parameter_coordinates_second_or_kolet[value]}')
                 if parameter:
@@ -175,15 +192,22 @@ def generate_individual_pdf(row_data, output_dir):
                     if x_coord == 0 and y_coord == 0:
                         continue  # Skip printing for (0, 0) coordinates
                     if parameter_index == 1:
-                        if len(str(parameter)) > 24:
+                        # TODO changed 24 => 26
+                        if len(str(parameter)) > 26:
                             template_canvas.setFont('Hebrew_david', 9)
+                            font_size = 9
                             x_coord = 200
+                            if len(str(parameter)) < 30:
+                                x_coord = calculate_num(x_coord, parameter, 8, 29)
                         else:
                             template_canvas.setFont('Hebrew_david', 11)
+                            x_coord, y_coord = parameter_coordinates_sadran_hachvana[value]
+                            x_coord = calculate_num(x_coord, parameter, 4, 25)
                     else:
                         template_canvas.setFont('Hebrew_david', 11)
                     if value in ["Parameter1"]:
                         # template_canvas.setFont('Hebrew_david', 16)
+                        x_coord = calculate_num(x_coord, parameter, 5, 17)
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter2"]:
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
@@ -192,16 +216,19 @@ def generate_individual_pdf(row_data, output_dir):
                     if value in ["Parameter4"]:
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter5"]:
+                        x_coord = calculate_num(x_coord, parameter, 5, 22)
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter6"]:
+                        x_coord = calculate_num(x_coord, parameter, 5, 18)
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter7"]:
-                        template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
+                        template_canvas.drawString(x_coord + 5, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter8"]:
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     parameter_index += 1
 
         else:
+            # all the rest of the files
             print(f'{row_data[3]} {row_data[2]}')
             # Initialize an iterator for the parameters
 
@@ -212,29 +239,39 @@ def generate_individual_pdf(row_data, output_dir):
                     if x_coord == 0 and y_coord == 0:
                         continue  # Skip printing for (0, 0) coordinates
                         # Check if we are processing the second parameter and adjust the font size
+
                     if parameter_index == 1:
-                        if len(str(parameter)) > 24:
+                        # TODO changed 24 => 26
+                        if len(str(parameter)) > 26:
                             template_canvas.setFont('Hebrew_david', 9)
                             x_coord = 200
+                            if len(str(parameter)) < 30:
+                                x_coord = calculate_num(x_coord, parameter, 8, 29)
                         else:
                             template_canvas.setFont('Hebrew_david', 11)
+                            x_coord, y_coord = parameter_coordinates_sadran_hachvana[value]
+                            x_coord = calculate_num(x_coord, parameter, 4, 25)
                     else:
                         template_canvas.setFont('Hebrew_david', 11)
-
                     if value in ["Parameter1"]:
                         # template_canvas.setFont('Hebrew_david', 16)
+                        x_coord = calculate_num(x_coord, parameter, 5, 17)
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter2"]:
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter3"]:
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter4"]:
-                        template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
+                        if not row_data[2] == 'מזכיר ראשון':
+                            template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter5"]:
+                        x_coord = calculate_num(x_coord, parameter, 5, 22)
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter6"]:
+                        x_coord = calculate_num(x_coord, parameter, 5, 18)
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter7"]:
+                        # kalpi num
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
                     if value in ["Parameter8"]:
                         template_canvas.drawString(x_coord, y_coord, reverse_slicing(parameter))
@@ -300,9 +337,9 @@ for row in sheet.iter_rows(min_row=2, max_col=11, values_only=True):
     try:
         # Define the template file based on the city and job description
         if city == 'רמת השרון':
-            if job_description == 'מזכיר':
+            if job_description == 'מזכיר ראשון' or job_description == 'מזכיר שני':
                 template_file_path = f'pdf_files/{ramat_hasharon["mazkir"]}'
-            elif job_description == 'מזכיר מחליף':
+            elif job_description == 'מזכיר מחליף בריכוז':
                 template_file_path = f'pdf_files/{ramat_hasharon["mazkir_mahlif"]}'
             elif job_description == 'סדרן':
                 template_file_path = f'pdf_files/{ramat_hasharon["sadran"]}'
